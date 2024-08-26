@@ -1,0 +1,16 @@
+/* SplitView.css */
+.split-view {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.left-pane, .right-pane {
+  overflow: auto;
+}
+
+.divider {
+  width: 5px;
+  cursor: col-resize;
+  background-color: #ccc;
+}
