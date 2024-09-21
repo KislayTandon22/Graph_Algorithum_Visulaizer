@@ -1,6 +1,26 @@
-/* App.css */
-.app {
-    height: 100%;
-    width: 100%;
-  }
-  
+.App {
+  display: flex;
+  height: 100vh;
+}
+
+.graph-container {
+  flex: 3; /* 70% of the screen for the graph */
+}
+
+.controls {
+  flex: 1; /* 30% of the screen for controls */
+  padding: 20px;
+  box-shadow: -5px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+input {
+  margin: 5px;
+  padding: 10px;
+  width: 80%;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  width: 50%;
+}
