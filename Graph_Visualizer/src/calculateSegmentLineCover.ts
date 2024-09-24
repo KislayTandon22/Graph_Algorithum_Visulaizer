@@ -1,50 +1,114 @@
 interface Node {
     id: string;
+    x?: number;
+    y?: number;
+    fx?: number;
+    fy?: number;
   }
   
   interface Link {
-    source: string;
-    target: string;
+    source: string | Node;
+    target: string | Node;
   }
   
-  // Helper function to calculate segment and line cover numbers
   export const calculateSegmentLineCover = (nodes: Node[], links: Link[]): { seg: number, line: number } => {
     const pathComponents = findPathComponents(nodes, links);
     const remainingGraph = removePathComponents(nodes, links, pathComponents);
   
-    // Calculate line cover number for the remaining graph
     const lineCoverNumber = computeLineCover(remainingGraph);
-    
-    // Calculate the segment number based on the line cover number
     const segmentNumber = computeSegmentNumber(remainingGraph, lineCoverNumber);
   
     return { seg: segmentNumber + pathComponents.length, line: lineCoverNumber };
   };
   
-  // Helper functions based on Section 5's algorithm
-  
-  // Find all path components
   const findPathComponents = (nodes: Node[], links: Link[]): Node[] => {
-    // Identify and return path components from the graph
-    // Paths are connected components that look like chains of nodes
-    return [];  // Simplified for demo purposes
+    const visited = new Set<string>();
+    const pathComponents: Node[] = [];
+  
+    for (const node of nodes) {
+      if (!visited.has(node.id)) {
+        const path = dfs(node, nodes, links, visited);
+        if (path.length > 1) {
+          pathComponents.push(...path);
+        }
+      }
+    }
+  
+    return pathComponents;
   };
   
-  // Remove path components and return the simplified graph
-  const removePathComponents = (nodes: Node[], links: Link[], pathComponents: Node[]) => {
-    // Remove all path components and return the remaining graph
-    return { nodes, links };  // Simplified for demo purposes
+  const dfs = (node: Node, nodes: Node[], links: Link[], visited: Set<string>): Node[] => {
+    const path: Node[] = [];
+    let current: Node | undefined = node;
+  
+    while (current && !visited.has(current.id)) {
+      visited.add(current.id);
+      path.push(current);
+  
+      const neighbors = links
+        .filter(link => link.source === current!.id || link.target === current!.id)
+        .map(link => link.source === current!.id ? link.target : link.source)
+        .filter(neighborId => !visited.has(neighborId));
+  
+      if (neighbors.length === 1) {
+        current = nodes.find(n => n.id === neighbors[0]);
+      } else {
+        break;
+      }
+    }
+  
+    return path;
   };
   
-  // Compute the line cover number
+  const removePathComponents = (nodes: Node[], links: Link[], pathComponents: Node[]): { nodes: Node[], links: Link[] } => {
+    const pathNodeIds = new Set(pathComponents.map(n => n.id));
+    const remainingNodes = nodes.filter(n => !pathNodeIds.has(n.id));
+    const remainingLinks = links.filter(l => 
+      !pathNodeIds.has(typeof l.source === 'string' ? l.source : l.source.id) && 
+      !pathNodeIds.has(typeof l.target === 'string' ? l.target : l.target.id)
+    );
+  
+    return { nodes: remainingNodes, links: remainingLinks };
+  };
+  
   const computeLineCover = (graph: { nodes: Node[], links: Link[] }): number => {
-    // Implementation of the line cover number calculation based on the algorithm in the paper
-    return 1;  // Simplified for demo purposes
+    const { nodes, links } = graph;
+    let lineCover = 0;
+    const coveredNodes = new Set<string>();
+  
+    while (coveredNodes.size < nodes.length) {
+      let bestEdge: Link | null = null;
+      let bestCoverage = 0;
+  
+      for (const link of links) {
+        let coverage = 0;
+        const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+        const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+  
+        if (!coveredNodes.has(sourceId)) coverage++;
+        if (!coveredNodes.has(targetId)) coverage++;
+  
+        if (coverage > bestCoverage) {
+          bestEdge = link;
+          bestCoverage = coverage;
+        }
+      }
+  
+      if (bestEdge) {
+        const sourceId = typeof bestEdge.source === 'string' ? bestEdge.source : bestEdge.source.id;
+        const targetId = typeof bestEdge.target === 'string' ? bestEdge.target : bestEdge.target.id;
+        coveredNodes.add(sourceId);
+        coveredNodes.add(targetId);
+        lineCover++;
+      } else {
+        lineCover += nodes.length - coveredNodes.size;
+        break;
+      }
+    }
+  
+    return lineCover;
   };
   
-  // Compute the segment number
   const computeSegmentNumber = (graph: { nodes: Node[], links: Link[] }, lineCoverNumber: number): number => {
-    // Calculate the segment number based on the line cover number
-    return Math.pow(lineCoverNumber, 2);  // Simplified for demo purposes
+    return Math.min(graph.nodes.length, lineCoverNumber * lineCoverNumber);
   };
-  
